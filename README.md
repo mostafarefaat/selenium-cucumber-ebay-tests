@@ -41,40 +41,44 @@ A **Selenium + Cucumber (BDD) + TestNG** test automation framework built in Java
 ```
 ebayAutomationFramework/
 │
+├── .idea/                      # IDE config (git-ignored in most setups)
+├── .mvn/                       # Maven wrapper files
+│
 ├── src/
 │   ├── main/
 │   │   └── java/
-│   │       ├── Managers/
+│   │       ├── abstracts/
+│   │       │   └── Abstract.java
+│   │       ├── managers/
 │   │       │   └── PageManager.java
-│   │       ├── Pages/
+│   │       ├── pages/
 │   │       │   ├── LandingPage.java
 │   │       │   └── (other page classes...)
-│   │       ├── Abstract/
-│   │       │   └── Abstract.java
-│   │       └── Resources/
+│   │       └── resources/
 │   │           └── GlobalData.properties
 │   │
 │   └── test/
 │       ├── java/
-│       │   ├── Cucumber/
-│       │   │   └── StepDefinitions.java
-│       │   ├── TestComponents/
-│       │   │   ├── BaseTest.java
-│       │   │   └── RetryAnalyzer.java
-│       │   └── runner/
-│       │       └── TestRunner.java
+│       │   ├── cucumber/
+│       │   │   └── searchSteps.java
+│       │   ├── runner/
+│       │   │   └── TestRunner.java
+│       │   └── testcomponents/
+│       │       └── BaseTest.java
 │       │
 │       └── resources/
 │           └── features/
-│               └── SearchFlow.feature
+│               └── search-flow.feature
 │
 ├── target/                     # Build output (git-ignored)
+│   ├── classes/
+│   ├── generated-sources/
+│   ├── generated-test-sources/
+│   ├── test-classes/
 │   ├── cucumber.html           # Test execution report
 │   └── cucumber.json
 │
-├── reports/
-│   └── screenshots/            # Failure screenshots
-│
+├── .gitignore
 ├── pom.xml
 └── README.md
 ```
@@ -83,23 +87,23 @@ ebayAutomationFramework/
 
 ## 🏷 Naming Conventions
 
-This framework follows standard Java naming conventions with some framework-specific rules layered on top.
+This framework follows standard Java naming conventions.
 
 ### Packages
-> **Best practice:** Java package names should be **all lowercase**, with no underscores (e.g. `pages`, `managers`, `testcomponents`, `stepdefinitions`).
+> **Best practice:** Java package names should be **all lowercase**, with no underscores (e.g. `pages`, `managers`, `testcomponents`, `cucumber`).
 >
-> ⚠️ **Note:** This project currently uses `PascalCase` package names (`Pages`, `Managers`, `Cucumber`, `TestComponents`) for readability during early development. This deviates from Java convention. If contributing, prefer aligning new packages to lowercase, or raise a refactor PR to standardize the whole project.
+> ✅ All packages in this project (`abstracts`, `managers`, `pages`, `resources`, `cucumber`, `runner`, `testcomponents`) are all-lowercase, fully aligned with convention.
 
 | Convention | Example |
 |---|---|
-| Packages | `pages`, `managers`, `stepdefinitions`, `testcomponents` |
+| Packages | `pages`, `managers`, `cucumber`, `testcomponents` |
 | Classes | `PascalCase` → `LandingPage`, `PageManager`, `BaseTest` |
 | Methods | `camelCase`, verb-first → `isLandingPageLoaded()`, `searchForItem()`, `filterByTransmission()` |
 | Boolean methods | Prefix with `is` / `has` / `are` → `isUrlCorrect()`, `areResultsDisplayed()` |
 | Constants | `UPPER_SNAKE_CASE` → `MAX_RETRY_COUNT` |
 | Locator fields | `camelCase`, descriptive of the element → `searchBox`, `manualFilterCheckBox` |
-| Feature files | `PascalCase.feature`, named after the flow → `SearchFlow.feature` |
-| Step definition files | `StepDefinitions.java` (or split by feature for larger suites, e.g. `SearchSteps.java`, `CheckoutSteps.java`) |
+| Feature files | `kebab-case.feature`, named after the flow → `search-flow.feature` |
+| Step definition files | `camelCase` + `Steps` suffix, one per feature area → `searchSteps.java`, `checkoutSteps.java` |
 | Page Object files | `<PageName>Page.java` → `LandingPage.java`, `CartPage.java`, `CheckOutPage.java` |
 
 ### Gherkin step naming
@@ -122,11 +126,11 @@ This framework uses the **Page Object Model (POM)**, coordinated through a light
   ```java
   pageManager.landingPage().searchForItem("mazda mx-5");
   ```
-- `BaseTest` owns the `WebDriver` lifecycle (`launchApplication()` / `tearDown()`) and is extended by the Cucumber `StepDefinitions` class.
+- `BaseTest` owns the `WebDriver` lifecycle (`launchApplication()` / `tearDown()`) and is extended by the Cucumber `searchSteps` class.
 - **No `ThreadLocal`/singleton complexity** — this framework runs sequentially (no parallel execution), so `PageManager` and `driver` are plain instance fields, created fresh once per scenario via Cucumber's `@Before` hook.
 
 ```
-StepDefinitions (extends BaseTest)
+searchSteps (extends BaseTest)
         │
         ├── @Before → launchApplication() → creates driver + pageManager
         │
@@ -198,7 +202,7 @@ mvn test -Dcucumber.filter.tags="@search"
 
 Browser and environment settings are controlled via:
 ```
-src/main/java/Resources/GlobalData.properties
+src/main/java/resources/GlobalData.properties
 ```
 
 Example:
@@ -245,25 +249,27 @@ target/cucumber.html
 
 Flaky UI scenarios can be automatically retried using a TestNG `IRetryAnalyzer`, wired in globally via `IAnnotationTransformer` (no per-test annotation needed — applies to every Cucumber scenario automatically).
 
-- Retry count is configurable in `TestComponents/RetryAnalyzer.java`:
+- Retry count is configurable in `testcomponents/RetryAnalyzer.java`:
   ```java
   private static final int MAX_RETRY_COUNT = 2; // total attempts = 3
   ```
 - Each retry re-runs the **entire scenario** from `@Before` to `@After` (fresh browser session) — there is no mid-scenario resume.
+
+> Note: if `RetryAnalyzer.java` isn't present yet in `testcomponents/`, add it before relying on this section — currently only `BaseTest.java` lives there.
 
 ---
 
 ## ✍️ Writing New Tests
 
 1. **Add/extend a `.feature` file** under `src/test/resources/features/`, using plain-English Gherkin steps.
-2. **Implement matching step definitions** in `Cucumber/StepDefinitions.java` (or a new dedicated step class for a new feature area).
-3. **Add or extend a Page Object** under `Pages/` for any new page/screen involved.
-4. **Register any new page** as a lazy getter in `Managers/PageManager.java`.
+2. **Implement matching step definitions** in `cucumber/searchSteps.java` (or a new dedicated `<feature>Steps.java` class for a new feature area).
+3. **Add or extend a Page Object** under `pages/` for any new page/screen involved.
+4. **Register any new page** as a lazy getter in `managers/PageManager.java`.
 5. Run the scenario and confirm it passes **and** fails correctly (comment out a step temporarily to sanity-check your assertions aren't silently passing).
 
 ### Example — adding a new page
 ```java
-// Managers/PageManager.java
+// managers/PageManager.java
 public CartPage cartPage() {
     if (cartPage == null) {
         cartPage = new CartPage(driver);
@@ -279,7 +285,7 @@ public CartPage cartPage() {
 1. Create a feature branch: `git checkout -b feature/<short-description>`
 2. Follow the [naming conventions](#-naming-conventions) above
 3. Ensure `mvn test` passes locally before opening a PR
-4. Keep step definitions thin — business logic and locators belong in Page Objects, not in `StepDefinitions`
+4. Keep step definitions thin — business logic and locators belong in Page Objects, not in step definition classes
 5. Open a PR with a clear description of the scenario(s) added/changed
 
 ---
