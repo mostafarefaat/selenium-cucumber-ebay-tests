@@ -1,4 +1,4 @@
-package Cucumber;
+package cucumber;
 
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
@@ -6,12 +6,12 @@ import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import TestComponents.BaseTest;
+import testcomponents.BaseTest;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.testng.Assert;
 
-public class StepDefinitions extends BaseTest {
+public class searchSteps extends BaseTest {
 
     @Before
     public void setUp() throws Exception {

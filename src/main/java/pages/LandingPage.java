@@ -1,6 +1,6 @@
-package Pages;
+package pages;
 
-import Absract.Abstract;
+import abstracts.Abstract;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -32,28 +32,19 @@ public class LandingPage extends Abstract {
     @FindBy(css = "input#gh-btn, button[type='submit']")
     private WebElement searchButton;
 
-    @FindBy(xpath = "//*[@id='srp-river-results' " +
-            "and contains(concat(' ', normalize-space(@class), ' '), ' srp-river-results ') " +
-            "and contains(concat(' ', normalize-space(@class), ' '), ' clearfix ')]" +
-            "//a[contains(@class,'s-card__link') ]//div[@role='heading']")
+    @FindBy(xpath ="//*[@id='srp-river-results']//a[contains(@class,'s-card__link') ]//div[@role='heading']")
     private List<WebElement> searchResults;
 
-    @FindBy(xpath = "//*[@id='srp-river-results' " +
-            "and contains(concat(' ', normalize-space(@class), ' '), ' srp-river-results ') " +
-            "and contains(concat(' ', normalize-space(@class), ' '), ' clearfix ')]" +
-            "//div[contains(@class,'s-card__subtitle')]//span[contains(text(),'Manual')]")
+    @FindBy(xpath = "//div[contains(@class,'s-card__subtitle')]//span[contains(.,'Manual')]")
     private List<WebElement> manualSubtitleSpans;
 
-    @FindBy(xpath = "//*[@id='srp-river-results' " +
-            "and contains(concat(' ', normalize-space(@class), ' '), ' srp-river-results ') " +
-            "and contains(concat(' ', normalize-space(@class), ' '), ' clearfix ')]" +
-            "//div[contains(@class,'s-card__subtitle')]//span[contains(text(),'Automatic')]")
+    @FindBy(xpath = "//div[contains(@class,'s-card__subtitle')]//span[contains(.,'Automatic')]")
     private List<WebElement> automaticSubtitleSpans;
 
-    @FindBy(xpath = "//span[contains(@class,'cbx x-refine__multi-select-cbx') and contains(text(),'Manual')]")
+    @FindBy(xpath = "//span[contains(@class,'x-refine__multi-select-cbx') and contains(.,'Manual')]")
     private WebElement manualFilterCheckBox;
 
-    @FindBy(xpath = "//span[contains(@class,'cbx x-refine__multi-select-cbx') and contains(text(),'Automatic')]")
+    @FindBy(xpath = "//span[contains(@class,'x-refine__multi-select-cbx') and contains(.,'Automatic')]")
     private WebElement automaticFilterCheckBox;
 
 
@@ -111,7 +102,7 @@ public class LandingPage extends Abstract {
 
     public boolean areResultsDisplayed() {
         try {
-            waitForElementToAppear(searchResults.get(1), Duration.ofSeconds(20));
+            waitForElementToAppear(searchResults.get(1), Duration.ofSeconds(10));
             return searchResults.get(1).isDisplayed();
         } catch (Exception e) {
             return false;
@@ -119,6 +110,7 @@ public class LandingPage extends Abstract {
     }
 
     public int getResultsCount() {
+        waitForElementToAppear(searchResults.get(1), Duration.ofSeconds(10));
         return searchResults.size();
     }
 

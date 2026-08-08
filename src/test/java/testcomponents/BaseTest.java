@@ -1,6 +1,6 @@
-package TestComponents;
+package testcomponents;
 
-import Managers.PageManager;
+import managers.PageManager;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.OutputType;

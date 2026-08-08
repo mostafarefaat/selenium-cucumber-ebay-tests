@@ -1,7 +1,7 @@
-package Managers;
+package managers;
 
 import org.openqa.selenium.WebDriver;
-import Pages.LandingPage;
+import pages.LandingPage;
 
 public class PageManager {
 
